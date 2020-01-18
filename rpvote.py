@@ -160,6 +160,7 @@ very smart way.
 """
 
 import sys
+import numpy as np
 
 class Contest:
     """Contest: Represents one contest, with all its candidates and ballots.
@@ -302,7 +303,16 @@ class Contest:
                 print(str(val).rjust(wid), end=' ')
             print()
         print()
-
+        
+    def margin_to_matrix(self):
+        """ Converts the margins in a numpy matrix """
+        matrix = np.full((self.count, self.count), np.NaN)
+        for pair, margin in self.margins.items():
+            if int(pair[0])-1 == int(pair[1])-1:
+                continue
+            matrix[int(pair[0])-1, int(pair[1])-1] = margin
+        return matrix
+        
     def compute(self):
         """compute() -> Outcome
 
@@ -793,8 +803,10 @@ if (file != sys.stdin):
 
 #contest.printballots()
 contest.computemargins()
-contest.printmargins()
 
+
+contest.printmargins()
+print(contest.margin_to_matrix())
 outcome = contest.compute()
 outcome.printout()
 outcome.printresult()
