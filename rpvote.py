@@ -161,6 +161,7 @@ very smart way.
 
 import sys
 import numpy as np
+from _dbus_bindings import String
 
 class Contest:
     """Contest: Represents one contest, with all its candidates and ballots.
@@ -198,6 +199,7 @@ class Contest:
             self.keydict[key] = True
         self.ballots = []
         self.margins = {}
+        self.margin_matrix = None
 
     def iskey(self, key):
         """iskey(key) -> bool
@@ -260,7 +262,9 @@ class Contest:
                             continue
                         for col in ballot[jx]:
                             self.applymargin(row, col, (ix<jx))
-
+        
+        self.margin_to_matrix()
+        
     def applymargin(self, row, col, rowwins):
         """applymargin(row, col, rowwins) -> None
 
@@ -306,12 +310,33 @@ class Contest:
         
     def margin_to_matrix(self):
         """ Converts the margins in a numpy matrix """
-        matrix = np.full((self.count, self.count), np.NaN)
+        matrix = np.full((self.count, self.count), 0)
         for pair, margin in self.margins.items():
             if int(pair[0])-1 == int(pair[1])-1:
                 continue
             matrix[int(pair[0])-1, int(pair[1])-1] = margin
-        return matrix
+        self.margin_matrix = matrix
+    
+    
+    def plot_margins(self):
+        """ Plots the margins colourfully """
+        import matplotlib.pyplot as plt
+        fig = plt.figure(figsize=(3,3))
+        ax = fig.add_subplot(111, frameon=True, xticks = [], yticks = [])
+        ax.axis('off')
+        img = plt.imshow(self.margin_matrix, cmap="viridis")
+        plt.colorbar(orientation='horizontal', label="margin")
+        img.set_visible(False)
+                    
+        tb = plt.table(cellText=self.margin_matrix,
+                        rowLabels=self.entries,
+                        colLabels=self.entries,
+                        loc='center',\
+                        cellColours=img.to_rgba(self.margin_matrix),
+                        colWidths = [0.1]*self.margin_matrix.shape[0],
+                        bbox=None)
+        ax.add_table(tb)
+        plt.show()
         
     def compute(self):
         """compute() -> Outcome
@@ -806,7 +831,7 @@ contest.computemargins()
 
 
 contest.printmargins()
-print(contest.margin_to_matrix())
+contest.plot_margins()
 outcome = contest.compute()
 outcome.printout()
 outcome.printresult()
