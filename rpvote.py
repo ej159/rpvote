@@ -203,7 +203,7 @@ class Contest:
 
         Is the given key one of the candidates in this contest?
         """
-        return self.keydict.has_key(key)
+        return key in self.keydict
 
     def addballot(self, ls):
         """addballot(list of lists) -> None
@@ -228,15 +228,15 @@ class Contest:
         Print out the list of ballots in the contest.
         """
 
-        print len(self.ballots), 'ballots:'
+        print(len(self.ballots), 'ballots:')
         for ballot in self.ballots:
             for ls in ballot:
                 if (len(ls) == 1):
-                    print ls[0],
+                    print(ls[0], end=' ')
                 else:
-                    print '(' + '/'.join(ls) + ')',
-            print
-        print
+                    print('(' + '/'.join(ls) + ')', end=' ')
+            print()
+        print()
 
     def computemargins(self):
         """computemargins() -> None
@@ -284,24 +284,24 @@ class Contest:
         Print out the margins table.
         """
 
-        print 'Margins:'
+        print('Margins:')
         wid = self.colwidth
 
-        print ''.rjust(wid),
+        print(''.rjust(wid), end=' ')
         for col in self.entries:
-            print col.rjust(wid),
-        print
+            print(col.rjust(wid), end=' ')
+        print()
 
         for row in self.entries:
-            print row.rjust(wid),
+            print(row.rjust(wid), end=' ')
             for col in self.entries:
                 if (col == row):
                     val = '`'
                 else:
                     val = self.margins.get((row,col), '')
-                print str(val).rjust(wid),
-            print
-        print
+                print(str(val).rjust(wid), end=' ')
+            print()
+        print()
 
     def compute(self):
         """compute() -> Outcome
@@ -347,7 +347,7 @@ class Contest:
         # Gather up and sort the margins.
 
         dic = {}
-        for tup in self.margins.keys():
+        for tup in list(self.margins.keys()):
             val = self.margins.get(tup, 0)
             if (val <= 0):
                 continue
@@ -365,7 +365,7 @@ class Contest:
             return outcome
             
         # Determine the largest margin.
-        maxmargin = max([ val for val in dic.keys() ])
+        maxmargin = max([ val for val in list(dic.keys()) ])
 
         for level in range(maxmargin, 0, -1):
             # Get the list of facts at this margin level.
@@ -478,16 +478,16 @@ class Outcome:
         or '`' for the diagonal.
         """
 
-        print 'Outrankings:'
+        print('Outrankings:')
         wid = self.contest.colwidth
 
-        print ''.rjust(wid),
+        print(''.rjust(wid), end=' ')
         for col in self.entries:
-            print col.rjust(wid),
-        print
+            print(col.rjust(wid), end=' ')
+        print()
 
         for row in self.entries:
-            print row.rjust(wid),
+            print(row.rjust(wid), end=' ')
             for col in self.entries:
                 if (col == row):
                     val = '`'
@@ -499,9 +499,9 @@ class Outcome:
                 dic = self.lower.get(row)
                 if (dic and dic.get(col)):
                     val += '+'
-                print str(val).rjust(wid),
-            print
-        print
+                print(str(val).rjust(wid), end=' ')
+            print()
+        print()
 
     def result(self):
         """result() -> dict mapping string to (int, int, int)
@@ -547,9 +547,34 @@ class Outcome:
             (w2,l2,t2) = res[key2]
             val = cmp((w2,t2), (w1,t1))
             return val
-        ls.sort(func)
         
-        print 'Place: Name (wins, losses, unresolved)'
+        #This is necessary for Python 3
+        def cmp(a, b):
+            return (a > b) - (a < b) 
+        
+        #This is necessary for Python 3
+        def cmp_to_key(mycmp):
+            'Convert a cmp= function into a key= function'
+            class K:
+                def __init__(self, obj, *args):
+                    self.obj = obj
+                def __lt__(self, other):
+                    return mycmp(self.obj, other.obj) < 0
+                def __gt__(self, other):
+                    return mycmp(self.obj, other.obj) > 0
+                def __eq__(self, other):
+                    return mycmp(self.obj, other.obj) == 0
+                def __le__(self, other):
+                    return mycmp(self.obj, other.obj) <= 0
+                def __ge__(self, other):
+                    return mycmp(self.obj, other.obj) >= 0
+                def __ne__(self, other):
+                    return mycmp(self.obj, other.obj) != 0
+            return K
+        #TODO Simplify  code for Python 3
+        ls.sort(key = cmp_to_key(func))
+        
+        print('Place: Name (wins, losses, unresolved)')
         wid = self.contest.colwidth
         ix = 1
         lastkey = None
@@ -559,7 +584,7 @@ class Outcome:
                 place = str(ix)+':'
             else:
                 place = '":'
-            print place.rjust(4), key.rjust(wid), (wins, losses, ties)
+            print(place.rjust(4), key.rjust(wid), (wins, losses, ties))
             ix += 1
             lastkey = key
 
@@ -571,9 +596,9 @@ class Outcome:
         """
 
         res = Outcome(self.contest)
-        for key in self.higher.keys():
+        for key in list(self.higher.keys()):
             res.higher[key] = self.higher[key].copy()
-        for key in self.lower.keys():
+        for key in list(self.lower.keys()):
             res.lower[key] = self.lower[key].copy()
         return res
 
@@ -664,12 +689,12 @@ class Outcome:
 
             dic = self.higher.get(winner)
             if (dic):
-                for key in dic.keys():
+                for key in list(dic.keys()):
                     if (not self.beats(key, loser)):
                         facts.append( (key, loser) )
             dic = self.lower.get(loser)
             if (dic):
-                for key in dic.keys():
+                for key in list(dic.keys()):
                     if (not self.beats(winner, key)):
                         facts.append( (winner, key) )
 
@@ -726,13 +751,13 @@ def read_file(file, assume_complete=False):
             for val in subls:
                 if (not contest.iskey(val)):
                     raise Exception('Unknown key in ballot: ' + val)
-                if (dic.has_key(val)):
+                if (val in dic):
                     raise Exception('Repeated key in ballot: ' + val)
                 dic[val] = True
         if (assume_complete):
             final = []
             for val in contest.entries:
-                if (not dic.has_key(val)):
+                if (val not in dic):
                     final.append(val)
             if (final):
                 ls.append(final)
@@ -757,8 +782,8 @@ else:
 
 try:
     contest = read_file(file, assume_complete)
-except Exception, ex:
-    print ex
+except Exception as ex:
+    print(ex)
     sys.exit(1)
     
 if (file != sys.stdin):
