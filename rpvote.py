@@ -338,6 +338,37 @@ class Contest:
         ax.add_table(tb)
         plt.show()
         
+    def plot_graph(self):
+        """ Plots the graph of pairwise comparisons """
+        import networkx as nx
+        import matplotlib.pyplot as plt
+        G = nx.DiGraph()
+        G.add_nodes_from(self.entries)
+        
+        edges = []
+        
+        for i,row in enumerate(self.margin_matrix):
+            for j, column in enumerate(self.margin_matrix):
+                if j >= i:
+                    continue
+                weight_value = self.margin_matrix[i,j]
+                #Ignore 0 weighted connections (they just complicate the graph)
+                if weight_value == 0:
+                    continue
+                if weight_value < 0:
+                    edges.append((str(j+1),str(i+1),{'weight':-weight_value}))
+                else:
+                    edges.append((str(i+1),str(j+1),{'weight':weight_value}))
+            
+        
+        G.add_edges_from(edges)
+        #G=nx.from_numpy_matrix(self.margin_matrix)
+        pos = nx.spring_layout(G, scale=2)
+        nx.draw_networkx(G, pos, with_labels=True)
+        grafo_labels = nx.get_edge_attributes(G,'weight')
+        nx.draw_networkx_edge_labels(G, pos, grafo_labels)
+        plt.show()
+        
     def compute(self):
         """compute() -> Outcome
 
@@ -831,7 +862,7 @@ contest.computemargins()
 
 
 contest.printmargins()
-contest.plot_margins()
+contest.plot_graph()
 outcome = contest.compute()
 outcome.printout()
 outcome.printresult()
