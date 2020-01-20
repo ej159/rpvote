@@ -161,7 +161,6 @@ very smart way.
 
 import sys
 import numpy as np
-from _dbus_bindings import String
 
 class Contest:
     """Contest: Represents one contest, with all its candidates and ballots.
@@ -200,6 +199,9 @@ class Contest:
         self.ballots = []
         self.margins = {}
         self.margin_matrix = None
+        #TODO Get labels to be read from files
+        #self.labels = {'1':'Lake District', '2':'Scotland', '3':'Slovenia', '4':'Montenegro'}
+        self.labels = {str(index +1):x for index,x in enumerate(self.entries)}
 
     def iskey(self, key):
         """iskey(key) -> bool
@@ -317,7 +319,6 @@ class Contest:
             matrix[int(pair[0])-1, int(pair[1])-1] = margin
         self.margin_matrix = matrix
     
-    
     def plot_margins(self):
         """ Plots the margins colourfully """
         import matplotlib.pyplot as plt
@@ -364,9 +365,31 @@ class Contest:
         G.add_edges_from(edges)
         #G=nx.from_numpy_matrix(self.margin_matrix)
         pos = nx.spring_layout(G, scale=2)
-        nx.draw_networkx(G, pos, with_labels=True)
+        nx.draw_networkx(G, pos, labels=self.labels)
         grafo_labels = nx.get_edge_attributes(G,'weight')
         nx.draw_networkx_edge_labels(G, pos, grafo_labels)
+        plt.show()
+        
+    def plot_pairwise_barcharts(self):
+        import matplotlib.pyplot as plt
+        fig, axs = plt.subplots(int(self.margin_matrix.shape[0]/2), int(self.margin_matrix.shape[0]/2))
+        limits = (self.margin_matrix.min()*1.1, self.margin_matrix.max()*1.1)
+        fig.suptitle("Pairwise votes for each option")
+        for row in range(self.margin_matrix.shape[0]):
+            location = int(row/2), int(row%2)
+            current_option = self.labels[str(row+1)]
+            head_to_head = self.margin_matrix[row, :]
+            colours = head_to_head > 0
+            colours = ['green' if x else 'red' for x in colours]
+            axs[location].bar([self.labels[entry] for entry in self.entries], head_to_head, width = 0.9, align='center', color=colours)
+            axs[location].set_ylim(limits)
+            axs[location].set_ylabel("Votes preferring {} over Option X".format(current_option))
+            axs[location].set_xlabel("Option X")
+            axs[location].axhline(y=0, color='black')
+            axs[location].set_title(current_option)
+            
+            
+            
         plt.show()
         
     def compute(self):
@@ -650,7 +673,7 @@ class Outcome:
                 place = str(ix)+':'
             else:
                 place = '":'
-            print(place.rjust(4), key.rjust(wid), (wins, losses, ties))
+            print(place.rjust(4), self.contest.labels[key].rjust(wid), (wins, losses, ties))
             ix += 1
             lastkey = key
 
@@ -862,7 +885,9 @@ contest.computemargins()
 
 
 contest.printmargins()
+#contest.plot_margins()
 contest.plot_graph()
+contest.plot_pairwise_barcharts()
 outcome = contest.compute()
 outcome.printout()
 outcome.printresult()
