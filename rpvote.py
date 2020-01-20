@@ -394,7 +394,7 @@ class Contest:
         plt.show()
     
     def compute_borda_count(self):
-        """ Computes the borda count and ranking for the ballots for comparison """
+        """ Computes the Borda count and ranking for the ballots for comparison """
         
         tallies = np.zeros((len(self.entries)))
         for ballot in self.ballots:
@@ -408,7 +408,16 @@ class Contest:
                 else:
                     tallies[int(vote[0])-1] += points
         return tallies
-            
+           
+    def plot_borda_count(self):
+        """ Plots Borda count of ballots """
+        
+        tallies = self.compute_borda_count()
+        import matplotlib.pyplot as plt
+        plt.bar(self.entries, tallies)
+        plt.show()
+        
+         
     def compute(self):
         """compute() -> Outcome
 
@@ -902,7 +911,7 @@ contest.computemargins()
 
 
 contest.printmargins()
-print(contest.compute_borda_count())
+contest.plot_borda_count()
 #contest.plot_margins()
 contest.plot_graph()
 contest.plot_pairwise_barcharts()
