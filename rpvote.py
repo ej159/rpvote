@@ -161,6 +161,7 @@ very smart way.
 
 import sys
 import numpy as np
+from build.lib.spynnaker_visualisers.opengl_support import points
 
 class Contest:
     """Contest: Represents one contest, with all its candidates and ballots.
@@ -391,7 +392,23 @@ class Contest:
             
             
         plt.show()
+    
+    def compute_borda_count(self):
+        """ Computes the borda count and ranking for the ballots for comparison """
         
+        tallies = np.zeros((len(self.entries)))
+        for ballot in self.ballots:
+            for i, vote in enumerate(ballot):               
+                points = self.count - i
+                #Dealing with ties
+                if len(vote)>1:
+                    points = (points - self.count - i*len(vote))/len(vote)
+                    for element in vote[0]:
+                        tallies[int(element)-1] += points
+                else:
+                    tallies[int(vote[0])-1] += points
+        return tallies
+            
     def compute(self):
         """compute() -> Outcome
 
@@ -885,6 +902,7 @@ contest.computemargins()
 
 
 contest.printmargins()
+print(contest.compute_borda_count())
 #contest.plot_margins()
 contest.plot_graph()
 contest.plot_pairwise_barcharts()
